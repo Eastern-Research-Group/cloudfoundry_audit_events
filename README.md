@@ -1,6 +1,6 @@
 # Cloud Foundry Audit Events
 
-This repository contains a script and associated GitHub Action that can be used automatically export [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) on a scheduled basis. It also contains a script that can create an MS Excel document based on the data obtained from the automated script.
+This repository contains a script and associated GitHub Action that can be used to automatically export [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) on a scheduled basis. It also contains a script that can create an MS Excel document based on the data obtained from the automated script.
 
 ## Reason for its creation
 
@@ -19,7 +19,7 @@ The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Clou
 
  1. Copy this code into a private GitHub repository you own.
  2. Configure the GitHub Action schedule setting (located in the GitHub Action .yml) to match your requirement. The default is set to run every 24 hours.
- 3. Setup the the two required Action Secrets ( *CG_USERNAME* and *CG_PASSWORD*). The values for these secrets are explained [here](https://cloud.gov/docs/services/cloud-gov-service-account/). 
+ 3. Setup the the two required Action Secrets ( *CG_USERNAME* and *CG_PASSWORD*). The values for these secrets are explained [here](https://cloud.gov/docs/services/cloud-gov-service-account/). For help setting up Action Secrets, see [Set up Secrets in GitHub Action workflows](https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md). 
 
 ## Repository structure once the GitHub Action executes
 
