@@ -1,0 +1,75 @@
+name: Get Events
+
+on:
+ schedule:
+ - cron: "15 8 * * *"    
+
+jobs:
+  build:
+    name: Get CF audit events
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: checkout event-log-update branch  
+      run: |
+        BRANCH=$(git ls-remote --heads origin event-log-update)
+        [ ! -z "$BRANCH" ] && git push -d origin event-log-update      
+        git checkout -b event-log-update
+        git push -u origin event-log-update    
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: install CF CLI, log in, get org name
+      id: cf
+      run: |
+        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
+        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+        sudo apt-get update
+        sudo apt-get install cf7-cli
+        cf login -a https://api.fr.cloud.gov -u ${{ secrets.CG_USERNAME }} -p ${{ secrets.CG_PASSWORD }}
+        OUTPUT=$(cf orgs 2>&1)
+        ORG=$(awk '{print $NF}' <<< $(echo $OUTPUT))
+        echo "org is $ORG"
+        echo "org=$ORG" >> $GITHUB_ENV
+
+    - name: run get_events.py 
+      run: |
+        python scripts/get_events.py ${{ env.org }}
+        echo get_events.py exited with code $?
+
+    - name: push updated files
+      run: |
+        git config user.name '${{ github.actor }}'
+        git config user.email '${{ github.actor }}@users.noreply.github.com'   
+        git add -A 
+        git commit -m "Event log update"
+        git push
+      
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        source_branch: "event-log-update"  
+        destination_branch: "main"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        pr_label: "automerge"
+        pr_title: "Event log update"
+        
+    - name: Merge pull request
+      run: |
+        git config pull.rebase false
+        git pull origin main
+        git merge main
+        git checkout main
+        git merge --no-ff event-log-update
+        git push origin main
+        git pull origin main
+                
