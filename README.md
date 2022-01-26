@@ -4,7 +4,7 @@ This repository contains a script and associated GitHub Action that can be used 
 
 ## Reason for its creation
 
-The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) for 31 days. Based on this, we needed a way to make sure audit events were being exported and saved elsewhere before they expired. While our configuration of the GitHub Action is currently setup to run every 24 hours, other users can easily adjust it to suit your needs. The script is smart enough to know when it last ran to make sure all events are captured and not duplicated. 
+The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) for 31 days. Based on this, we needed a way to make sure audit events were being exported and saved elsewhere before they expired. While our configuration of the GitHub Action is currently setup to run every 24 hours, other users can easily adjust it to suit their needs. The script is smart enough to know when it last ran to make sure all events are captured and not duplicated. 
 
 ## Initial goals
 
@@ -18,7 +18,7 @@ The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Clou
 ## Suggested steps to setup
 
  1. Copy this code into a private GitHub repository you own.
- 2. Configure the GitHub Action schedule setting (located in the GitHub Action .yml) to match your requirement. The default is set to run every 24 hours.
+ 2. Configure the GitHub Action schedule setting (located in the GitHub Action .yml) to match your requirement. The default is set to run every 24 hours. Information on changing the schedule can be found [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule).
  3. Setup the the two required Action Secrets ( *CG_USERNAME* and *CG_PASSWORD*). The values for these secrets are explained [here](https://cloud.gov/docs/services/cloud-gov-service-account/). For help setting up Action Secrets, see [Set up Secrets in GitHub Action workflows](https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md). 
 
 ## Repository structure once the GitHub Action executes
