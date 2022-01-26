@@ -24,7 +24,7 @@ The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Clou
 ## Repository structure once the GitHub Action executes
 
 <p align="center">
-      <img height="50%" width="50%" src="/docs/img/folder_tree.png" alt="Screenshot of repo folder structure after GitHub Action execution">
+      <img height="100%" width="100%" src="/docs/img/folder_tree.png" alt="Screenshot of repo folder structure after GitHub Action execution">
 </p>
 
 ## How to create an audit report (i.e., MS Excel based)
