@@ -11,6 +11,7 @@ import os
 import json
 import hashlib
 import re
+from datetime import datetime, time
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font
 from openpyxl.utils import get_column_letter
@@ -102,7 +103,7 @@ def GetKey(val):
 ######################################################################################################
 
 
-def write_events_to_sheet(sheet0, data, audit_event_types):
+def write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event_end_dt):
     HeaderColorFill = PatternFill(fgColor="C0C0C0", fill_type="solid")
 
     sheet0["A1"] = "Timestamp"
@@ -154,7 +155,20 @@ def write_events_to_sheet(sheet0, data, audit_event_types):
 
     for d in data["resources"]:
         if audit_event_types == None or audit_event_types == "" or (audit_event_types != None and d["type"] in audit_event_types):
+            event_dt = datetime.strptime(d["created_at"], '%Y-%m-%dT%H:%M:%SZ')
+
+            if event_start_dt != None and event_end_dt == None:
+                if event_dt < event_start_dt:
+                    continue
+            elif  event_start_dt == None and event_end_dt != None:
+                if event_dt > event_end_dt:
+                    continue
+            elif event_start_dt != None and event_end_dt != None: #between
+                if event_dt < event_start_dt or event_dt > event_end_dt:
+                    continue
+
             ExcelRowRef += 1
+
             sheet0["A" + str(ExcelRowRef)] = d["created_at"]
             sheet0["B" + str(ExcelRowRef)] = getValueUsingGUID(data["org"],
                                                                d["organization"]["guid"], "MISSING ORG NAME")
@@ -197,7 +211,7 @@ def write_events_to_sheet(sheet0, data, audit_event_types):
 ######################################################################################################
 
 
-def archive_all_audit_events_by_type(data, output_file):
+def archive_all_audit_events_by_type(data, output_file, event_start_dt, event_end_dt):
 
     Excelworkbook = Workbook()
 
@@ -206,32 +220,32 @@ def archive_all_audit_events_by_type(data, output_file):
     sheet0 = Excelworkbook.active
     sheet0.title = "All Events"
     audit_event_types = ""
-    write_events_to_sheet(sheet0, data, audit_event_types)
+    write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event_end_dt)
 
     print("User Access Changes...")
     sheet1 = Excelworkbook.create_sheet("User Access Changes", 1)
     audit_event_types = "audit.user.space_developer_add,audit.user.space_developer_remove,audit.user.space_auditor_add,audit.user.space_auditor_remove,audit.user.space_manager_add,audit.user.space_manager_remove"
-    write_events_to_sheet(sheet1, data, audit_event_types)
+    write_events_to_sheet(sheet1, data, audit_event_types, event_start_dt, event_end_dt)
 
     print("Route Changes...")
     sheet2 = Excelworkbook.create_sheet("Route Changes", 2)
     audit_event_types = "audit.route.create,audit.route.delete-request,audit.route.update"
-    write_events_to_sheet(sheet2, data, audit_event_types)
+    write_events_to_sheet(sheet2, data, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Instance Events...")
     sheet3 = Excelworkbook.create_sheet("Service Instance Events", 3)
     audit_event_types = "audit.service_instance.create,audit.service_instance.bind_route,audit.service_instance.update,audit.service_instance.unbind_route,audit.service_instance.delete"
-    write_events_to_sheet(sheet3, data, audit_event_types)
+    write_events_to_sheet(sheet3, data, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Bindings...")
     sheet4 = Excelworkbook.create_sheet("Service Bindings", 4)
     audit_event_types = "audit.service_binding.create,service_instance.bind_route,audit.service_instance.unbind_route"
-    write_events_to_sheet(sheet4, data, audit_event_types)
+    write_events_to_sheet(sheet4, data, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Events...")
     sheet5 = Excelworkbook.create_sheet("Service Events", 5)
     audit_event_types = "audit.service.create,audit.service.delete,audit.service.update,audit.service_binding.create,audit.service_binding.delete,service_instance.bind_route,audit.service_instance.create,audit.service_instance.delete,audit.service_instance.unbind_route,audit.service_instance.update"
-    write_events_to_sheet(sheet5, data, audit_event_types)
+    write_events_to_sheet(sheet5, data, audit_event_types, event_start_dt, event_end_dt)
 
     print()
 
@@ -243,14 +257,14 @@ def archive_all_audit_events_by_type(data, output_file):
 ######################################################################################################
 
 
-def start(input_file, output_file):
+def start(input_file, output_file, event_start_dt, event_end_dt):
 
     with open(input_file, 'r') as f:
         text = f.read()
 
     data = json.loads(text)
 
-    archive_all_audit_events_by_type(data, output_file)
+    archive_all_audit_events_by_type(data, output_file, event_start_dt, event_end_dt)
 
     return
 
@@ -260,8 +274,10 @@ def start(input_file, output_file):
 
 full_cmd_arguments = sys.argv
 argument_list = full_cmd_arguments[1:]
-short_options = "i:o:"
-long_options = ["input_file=", "output_file="]
+short_options = "i:o:s:e:"
+long_options = ["input_file=", "output_file=", "event_start_dt=", "event_end_dt="]
+event_start_dt = None
+event_end_dt = None
 
 try:
     arguments, values = getopt.getopt(
@@ -277,6 +293,10 @@ for current_argument, current_value in arguments:
         input_file = current_value
     if current_argument in ("-o", "--output_file"):
         output_file = current_value
+    if current_argument in ("-s", "--event_start_dt"):
+        event_start_dt = current_value
+    if current_argument in ("-e", "--event_end_dt"):
+        event_end_dt = current_value
 
 if output_file == "":
     print("An output file is required.")
@@ -286,4 +306,20 @@ if input_file == "":
     print("An input file is required.")
     sys.exit(-3)
 
-start(input_file, output_file)
+# Validate date time values
+try:
+    if event_start_dt != None:
+        event_start_dt = datetime.strptime(event_start_dt, '%Y-%m-%d %H:%M:%S')
+    if event_end_dt != None:
+        event_end_dt = datetime.strptime(event_end_dt, '%Y-%m-%d %H:%M:%S')
+except ValueError:
+    print("Invalid date time values")
+    sys.exit(-4)
+
+# Make sure event_end_dt is not > event_start_dt
+if (event_start_dt != None and event_end_dt != None) and event_start_dt > event_end_dt:
+    print("event_start_dt should not be greater than event_end_dt")
+    sys.exit(-4)
+
+
+start(input_file, output_file, event_start_dt, event_end_dt)
