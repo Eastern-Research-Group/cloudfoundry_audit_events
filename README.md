@@ -2,6 +2,8 @@
 
 This repository contains a script and associated GitHub Action that can be used to automatically export [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) on a scheduled basis. It also contains a script that can create an MS Excel document based on the data obtained from the automated script.
 
+Please note: There is an external sister repository ([cloudfoundry_auditing_scripts](https://github.com/Eastern-Research-Group/cloudfoundry_auditing_scripts)) that has many other helpful Cloud Foundry related scripts.
+
 ## Reason for its creation
 
 The Cloud Foundry instance we're using (cloud.gov) is only setup to retain [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) for 31 days. Based on this, we needed a way to make sure audit events were being exported and saved elsewhere before they expired. While our configuration of the GitHub Action is currently setup to run every 24 hours, other users can easily adjust it to suit their needs. The script is smart enough to know when it last ran to make sure all events are captured and not duplicated. 
