@@ -41,7 +41,11 @@ python audit_event_reporter.py -i C:\Cooper\cloudfoundry_audit_events\data\test-
 
 **Usage**
  - **input_file** - file path to the .json file holding audit events created but the GitHub Action.
- - **output_file** - file path to where to save the MS Excel based results to.
+ - **organization** - (optional) The organization name to filter results by.
+ - **spaces** - (optional) A comma delimited string of space names to filter the results by.
+ - **event_begin_dt** - (optional) Begin date for which events should include in the output report file.
+ - **event_end_dt** - (optional) End date for which events should include in the output report file.
+ - **report_file** - file path to where to save the MS Excel based results to.
 
 ## Disclaimer
 
