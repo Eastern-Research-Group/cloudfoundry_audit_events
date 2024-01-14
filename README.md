@@ -2,11 +2,9 @@
 
 This repository contains a script and associated GitHub Action that can be used to automatically export [Cloud Foundry Audit Events](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html) on a scheduled basis. It also contains a script that can create an MS Excel document based on the data obtained from the automated script.
 
-<<<<<<< HEAD
-Please note: The latest version of this script contains breaking command-line parameter name changes which aligns the naming convention better with other scripts (specifically with the new organization and space name parameters).
-=======
-Please note: There is an external sister repository ([cloudfoundry_auditing_scripts](https://github.com/Eastern-Research-Group/cloudfoundry_auditing_scripts)) that has many other helpful Cloud Foundry related scripts.
->>>>>>> a33fe4a61aa4b400138409ecda42eef056ea790d
+Notice: The latest version of this script (2024-01-14) contains breaking command-line parameter name changes which aligns the naming convention better with other scripts (specifically with the new organization and space name parameters).  
+
+Also, please note: There is an external sister repository ([cloudfoundry_auditing_scripts](https://github.com/Eastern-Research-Group/cloudfoundry_auditing_scripts)) that has many other helpful Cloud Foundry related scripts.
 
 ## Reason for its creation
 
