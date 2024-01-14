@@ -103,7 +103,7 @@ def GetKey(val):
 ######################################################################################################
 
 
-def write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event_end_dt):
+def write_events_to_sheet(sheet0, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt):
     HeaderColorFill = PatternFill(fgColor="C0C0C0", fill_type="solid")
 
     sheet0["A1"] = "Timestamp"
@@ -167,11 +167,10 @@ def write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event
                 if event_dt < event_start_dt or event_dt > event_end_dt:
                     continue
 
-            ExcelRowRef += 1
-
-            sheet0["A" + str(ExcelRowRef)] = d["created_at"]
-            sheet0["B" + str(ExcelRowRef)] = getValueUsingGUID(data["org"],
-                                                               d["organization"]["guid"], "MISSING ORG NAME")
+            
+            temp_o_name = getValueUsingGUID(data["org"], d["organization"]["guid"], "MISSING ORG NAME")
+            if o_name != "" and o_name.lower() != temp_o_name.lower():
+                continue
 
             space_guid = ""
             try:
@@ -179,8 +178,14 @@ def write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event
             except:
                 space_guid = ""
 
-            sheet0["C" + str(ExcelRowRef)] = getValueUsingGUID(data["space"],
-                                                               space_guid, "MISSING SPACE NAME")
+            temp_space_name = getValueUsingGUID(data["space"], space_guid, "MISSING SPACE NAME")
+            if s_names != "" and temp_space_name.lower() not in s_names.lower():
+                continue
+
+            ExcelRowRef += 1
+            sheet0["A" + str(ExcelRowRef)] = d["created_at"]
+            sheet0["B" + str(ExcelRowRef)] = temp_o_name
+            sheet0["C" + str(ExcelRowRef)] = temp_space_name
             sheet0["D" + str(ExcelRowRef)] = d["actor"]["type"]
             sheet0["E" + str(ExcelRowRef)] = d["actor"]["name"]
             sheet0["F" + str(ExcelRowRef)] = d["type"]
@@ -211,7 +216,7 @@ def write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event
 ######################################################################################################
 
 
-def archive_all_audit_events_by_type(data, output_file, event_start_dt, event_end_dt):
+def archive_all_audit_events_by_type(data, o_name, s_names, report_file, event_start_dt, event_end_dt):
 
     Excelworkbook = Workbook()
 
@@ -220,36 +225,36 @@ def archive_all_audit_events_by_type(data, output_file, event_start_dt, event_en
     sheet0 = Excelworkbook.active
     sheet0.title = "All Events"
     audit_event_types = ""
-    write_events_to_sheet(sheet0, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet0, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print("User Access Changes...")
     sheet1 = Excelworkbook.create_sheet("User Access Changes", 1)
     audit_event_types = "audit.user.space_developer_add,audit.user.space_developer_remove,audit.user.space_auditor_add,audit.user.space_auditor_remove,audit.user.space_manager_add,audit.user.space_manager_remove"
-    write_events_to_sheet(sheet1, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet1, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print("Route Changes...")
     sheet2 = Excelworkbook.create_sheet("Route Changes", 2)
     audit_event_types = "audit.route.create,audit.route.delete-request,audit.route.update"
-    write_events_to_sheet(sheet2, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet2, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Instance Events...")
     sheet3 = Excelworkbook.create_sheet("Service Instance Events", 3)
     audit_event_types = "audit.service_instance.create,audit.service_instance.bind_route,audit.service_instance.update,audit.service_instance.unbind_route,audit.service_instance.delete"
-    write_events_to_sheet(sheet3, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet3, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Bindings...")
     sheet4 = Excelworkbook.create_sheet("Service Bindings", 4)
     audit_event_types = "audit.service_binding.create,service_instance.bind_route,audit.service_instance.unbind_route"
-    write_events_to_sheet(sheet4, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet4, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print("Service Events...")
     sheet5 = Excelworkbook.create_sheet("Service Events", 5)
     audit_event_types = "audit.service.create,audit.service.delete,audit.service.update,audit.service_binding.create,audit.service_binding.delete,service_instance.bind_route,audit.service_instance.create,audit.service_instance.delete,audit.service_instance.unbind_route,audit.service_instance.update"
-    write_events_to_sheet(sheet5, data, audit_event_types, event_start_dt, event_end_dt)
+    write_events_to_sheet(sheet5, data, o_name, s_names, audit_event_types, event_start_dt, event_end_dt)
 
     print()
 
-    Excelworkbook.save(filename=output_file)
+    Excelworkbook.save(filename=report_file)
     return
 
 
@@ -257,14 +262,14 @@ def archive_all_audit_events_by_type(data, output_file, event_start_dt, event_en
 ######################################################################################################
 
 
-def start(input_file, output_file, event_start_dt, event_end_dt):
+def start(input_file, o_name, s_names, report_file, event_start_dt, event_end_dt):
 
     with open(input_file, 'r') as f:
         text = f.read()
 
     data = json.loads(text)
 
-    archive_all_audit_events_by_type(data, output_file, event_start_dt, event_end_dt)
+    archive_all_audit_events_by_type(data, o_name, s_names, report_file, event_start_dt, event_end_dt)
 
     return
 
@@ -274,8 +279,8 @@ def start(input_file, output_file, event_start_dt, event_end_dt):
 
 full_cmd_arguments = sys.argv
 argument_list = full_cmd_arguments[1:]
-short_options = "i:o:s:e:"
-long_options = ["input_file=", "output_file=", "event_start_dt=", "event_end_dt="]
+short_options = "i:o:s:r:b:e:"
+long_options = ["input_file=", "organization=", "spaces=", "report_file=", "event_begin_dt=", "event_end_dt="]
 event_start_dt = None
 event_end_dt = None
 
@@ -287,23 +292,32 @@ except getopt.error as err:
     sys.exit(-1)
 
 o_name = ""
+s_names = ""
 file_name = ""
 for current_argument, current_value in arguments:
     if current_argument in ("-i", "--input_file"):
         input_file = current_value
-    if current_argument in ("-o", "--output_file"):
-        output_file = current_value
-    if current_argument in ("-s", "--event_start_dt"):
+    if current_argument in ("-o", "--organization"):
+        o_name = current_value
+    if current_argument in ("-s", "--spaces"):
+        s_names = current_value
+    if current_argument in ("-r", "--report_file"):
+        report_file = current_value
+    if current_argument in ("-b", "--event_begin_dt"):
         event_start_dt = current_value
     if current_argument in ("-e", "--event_end_dt"):
         event_end_dt = current_value
 
-if output_file == "":
+if report_file == "":
     print("An output file is required.")
     sys.exit(-2)
 
 if input_file == "":
     print("An input file is required.")
+    sys.exit(-3)
+
+if o_name == "" and s_names != "":
+    print("Cannot specify spaces without specifying a organization.")
     sys.exit(-3)
 
 # Validate date time values
@@ -322,4 +336,4 @@ if (event_start_dt != None and event_end_dt != None) and event_start_dt > event_
     sys.exit(-4)
 
 
-start(input_file, output_file, event_start_dt, event_end_dt)
+start(input_file, o_name, s_names, report_file, event_start_dt, event_end_dt)
